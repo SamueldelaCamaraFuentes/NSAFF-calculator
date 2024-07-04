@@ -34,6 +34,11 @@ ui <- dashboardPage(
               label = h3("File input"),
               multiple = FALSE, 
               accept = c("text/csv", ".csv")),
+    selectInput(inputId = "comptplatform", 
+                label = "Platform",
+                choices = list("Proteome Discoverer" = 1, 
+                               "MSFragger" = 2),
+                selected = 1),
     radioButtons(inputId = "method",
                  label = "Choice",
                  choices = c("Aminoacid´s length" = 1,
@@ -57,16 +62,24 @@ server <- function(input, output) {
   
   dataset <- reactive({
     validate(need(!is.null(input$file$datapath),
-                  "Please select a Proteome Discoverer output file"))
+                  "Please select a Proteome Discoverer or MSFragger output file"))
     multi <- readxl::read_xlsx(input$file$datapath, sheet = "Proteins")
-    psm_columns <- grep("PSM", colnames(multi), value = TRUE)
     
-    if (input$method == 1){
-      aa_column <- grep("AAs", colnames(multi), value = TRUE)
+    if (input$comptplatform == 1){
+      psm_columns <- grep("PSM", colnames(multi), value = TRUE)
       
-    } else if (input$method == 2){
-      aa_column <- grep("MW", colnames(multi), value = TRUE)
+      if (input$method == 1){
+        aa_column <- grep("AAs", colnames(multi), value = TRUE)
+        
+      } else if (input$method == 2){
+        aa_column <- grep("MW", colnames(multi), value = TRUE)
+      }
+      
+    } else if (input$comptplatform == 2){
+      psm_columns <- grep("Spectral Count", colnames(multi), value = TRUE)
+      aa_column <- grep("Length", colnames(multi), value = TRUE)
     }
+  
     # Convert columns to numeric
     multi[c(psm_columns, aa_column)] <- sapply(multi[c(psm_columns, aa_column)], as.numeric)
     
