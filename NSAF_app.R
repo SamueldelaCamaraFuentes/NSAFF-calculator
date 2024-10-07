@@ -27,7 +27,7 @@ options(shiny.maxRequestSize = 30*1024^2)
 # Define UI ----
 ui <- dashboardPage(
   skin = "blue",
-  dashboardHeader(title = "NSAFF Calculator"),
+  dashboardHeader(title = "NSAF Calculator"),
   
   dashboardSidebar(
     fileInput(inputId = "file", 
@@ -63,9 +63,9 @@ server <- function(input, output) {
   dataset <- reactive({
     validate(need(!is.null(input$file$datapath),
                   "Please select a Proteome Discoverer or MSFragger output file"))
-    multi <- readxl::read_xlsx(input$file$datapath, sheet = "Proteins")
     
     if (input$comptplatform == 1){
+      multi <- readxl::read_xlsx(input$file$datapath)
       psm_columns <- grep("PSM", colnames(multi), value = TRUE)
       
       if (input$method == 1){
@@ -76,6 +76,7 @@ server <- function(input, output) {
       }
       
     } else if (input$comptplatform == 2){
+      multi <- read.delim(input$file$datapath, sep = "\t", stringsAsFactors = FALSE, colClasses = "character") 
       psm_columns <- grep("Spectral Count", colnames(multi), value = TRUE)
       aa_column <- grep("Length", colnames(multi), value = TRUE)
     }
